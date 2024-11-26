@@ -21,7 +21,8 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
             
             $mtr->group(['prefix' => 'v1/'], function () use ($mtr) 
             {
-                $mtr->get('tes', 'MainController@tes');
+                $mtr->post('get-list-service-bengkel', 'ServiceController@GetListService');
+                $mtr->post('get-detail-service-bengkel', 'ServiceController@GetDetailService');
                 
             });
         });
