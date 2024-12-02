@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\ServiceModel;
+use DB;
 
 
 
@@ -89,17 +90,61 @@ class ServiceController extends Controller
     
 
         $dataService = ServiceModel::GetDetailServiceBengkel($username, $id_service);  
-    
-        Log::info('End GetDetailService');
-        return response()->json([
-            'status'   => 200,
-            'success'  => true,
-            'message'  => 'Request Success',
-            'data'     => $dataService,  
-        ], 200);
+
+                    
+                if (empty($dataService)) {
+                    Log::error('Data service not found for ID: ' . $id_service);
+                    return response()->json([
+                        'status' => 404,
+                        'success' => false,
+                        'message' => 'Service data not found',
+                        'data' => []
+                    ], 404);
+                }
+
+                $part = DB::connection('mtr')
+                ->table('mst.v_service_item_motor')
+                ->where('price_service_type', 'Part')
+                ->where('mst_regional_id', $dataService[0]->mst_regional_id)
+                ->where('mst_client_id', $dataService[0]->mst_client_id) 
+                ->get();
+            
+                 $jobs = DB::connection('mtr')
+                ->table('mst.v_service_item_motor')
+                ->where('price_service_type', 'Jasa')
+                ->where('mst_regional_id', $dataService[0]->mst_regional_id)
+                ->where('mst_client_id', $dataService[0]->mst_client_id)
+                ->get();
+
+                $gps = DB::connection('mtr')->table('mst.mst_vehicle_gps')
+                    ->where('nopol', $dataService[0]->nopol)
+                    ->first();
+
+                Log::info('End GetDetailService', [
+                    'id_service' => $id_service,
+                    'username' => $username
+                ]);
+
+                return response()->json([
+                    'status' => 200,
+                    'success' => true,
+                    'message' => 'Request Success',
+                    'data' => [
+                        'service' => $dataService,
+                        'part' => $part,
+                        'jobs' => $jobs,
+                        'gps' => $gps
+                    ]
+                ], 200);
     }
     
   
+
+    public function PostServiceProcess(Request $request)
+    {
+        
+    }
+    
   
 
 
