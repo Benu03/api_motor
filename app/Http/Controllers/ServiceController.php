@@ -144,7 +144,7 @@ class ServiceController extends Controller
 
     public function PostUploadService(Request $request)
     {
-        // Validasi input
+        Log::info('Begin PostUploadService');
         $validated = $this->validate($request, [
             'username'   => 'required|string',
             'spk_d_id'   => 'required|integer',
@@ -192,12 +192,14 @@ class ServiceController extends Controller
                 ->orderBy('created_date', 'desc')
                 ->get();
 
+                Log::info('End PostUploadService');
             return response()->json([
                 'success' => true,
                 'message' => 'File uploaded successfully',
                 'data'    => $data,
             ]);
         } catch (\Exception $e) {
+            Log::info('End PostUploadService');
             return response()->json([
                 'success' => false,
                 'message' => 'Error uploading file: ' . $e->getMessage(),
@@ -208,6 +210,7 @@ class ServiceController extends Controller
 
     public function getUploadService($filename)
     {
+        Log::info('Begin getUploadService');
         try {
             
             $data = DB::table('mvm.mvm_temp_upload_service')
@@ -240,7 +243,7 @@ class ServiceController extends Controller
             }
     
             $file = File::get($path);
-            
+            Log::info('End getUploadService');
             if (in_array($data->ext, $allowedImageExtensions)) {
                 return response($file, 200)->header('Content-Type', 'image/jpeg');
             } elseif (in_array($data->ext, $allowedVideoExtensions)) {
@@ -254,6 +257,7 @@ class ServiceController extends Controller
                 ], 400);
             }
         } catch (\Exception $e) {
+            Log::info('End getUploadService');
             return response()->json([
                 'status'  => 500,
                 'success' => false,
