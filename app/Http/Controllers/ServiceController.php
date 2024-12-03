@@ -174,11 +174,11 @@ class ServiceController extends Controller
 
             $filePath = $destinationPath;
             $remark = 'Uploaded by ' . $username;
-            $urlimage = env('APP_URL').'/api/v1/get-upload-service-process/'.$filename;
+            $urlimage = env('APP_URL').'/api/v1/get-upload-service-process/'.$service_no . '-' . $key ;
 
             DB::table('mvm.mvm_temp_upload_service')->insert([
                 'spk_d_id'           => $spk_d_id, 
-                'filename'     => $filename,
+                'filename'     => $service_no . '-' . $key,
                 'remark'       => $remark,
                 'path'         => $filePath,
                 'created_by'   => $username,
@@ -231,7 +231,7 @@ class ServiceController extends Controller
             $allowedImageExtensions = ['jpg', 'jpeg', 'png'];
             $allowedVideoExtensions = ['mp4'];
     
-            $path = $data->path.'/'.$filename;
+            $path = $data->path.'/'.$filename.$data->ext;
 
             if (!File::exists($path)) {
                 return response()->json([
