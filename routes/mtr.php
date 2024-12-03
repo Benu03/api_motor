@@ -24,6 +24,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-list-service-bengkel', 'ServiceController@GetListService');
                 $mtr->post('get-detail-service-bengkel', 'ServiceController@GetDetailService');
                 $mtr->post('post-service-process', 'ServiceController@PostServiceProcess');
+                $mtr->post('post-upload-process', 'ServiceController@PostUploadService');
                 
             });
         });

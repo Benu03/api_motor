@@ -13,15 +13,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\ServiceModel;
 use DB;
-
-
+use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 
 
 class ServiceController extends Controller
 {
-
-  
-
     public function GetListService(Request $request)
     {  
         Log::info('Begin GetListService');
@@ -142,10 +139,71 @@ class ServiceController extends Controller
 
     public function PostServiceProcess(Request $request)
     {
-        
+
+    }
+
+    public function PostUploadService(Request $request)
+    {
+        // Validasi input
+        $validated = $this->validate($request, [
+            'username'   => 'required|string',
+            'spk_d_id'   => 'required|integer',
+            'file'       => 'required|file|mimes:jpg,jpeg,png,mp4|max:2048',
+            'remark'     => 'required|string',
+            'nopol'      => 'required|string',
+        ]);
+
+        try {
+            $username = $request->input('username');
+            $spk_d_id = $request->input('spk_d_id');
+            $file = $request->file('file');
+            $remark = $request->input('remark');
+            $nopol = $request->input('nopol');
+
+            $service_no = 'MVM-' . $nopol . '-' . date("Ymd");
+            $destinationPath = storage_path('data/temp/service/' . date("Y") . '/' . date("m") . '/'. $service_no );
+
+            if (!is_dir($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $key = time();
+            $filename = $service_no . '-' . $key . '.' . $file->getClientOriginalExtension();
+
+            $file->move($destinationPath, $filename);
+
+            $filePath = $destinationPath . $filename;
+            $remark = 'Uploaded by ' . $username;
+
+            DB::table('mvm.mvm_temp_upload_service')->insert([
+                'spk_d_id'           => $spk_d_id, 
+                'filename'     => $filename,
+                'remark'       => $remark,
+                'path'         => $filePath,
+                'created_by'   => $username,
+                'created_date' => Carbon::now(),
+            ]);
+
+
+            $data = DB::table('mvm.mvm_temp_upload_service')
+                ->where('spk_d_id', $spk_d_id)
+                ->orderBy('created_date', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'File uploaded successfully',
+                'data'    => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading file: ' . $e->getMessage(),
+            ], 500);
+        }
     }
     
-  
+    
 
 
 }
