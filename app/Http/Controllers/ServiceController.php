@@ -219,7 +219,8 @@ class ServiceController extends Controller
     
             foreach ($dataUpload as $data) {
                 $destinationPath = storage_path('data/service/' . date("Y") . '/' . date("m") . '/') . $service_no;
-    
+                $urlfile = env('APP_URL').'/api/v1/get-upload-service-process/'.$data->filename;
+               
                 $dataUploadInsert = [
                     'mvm_service_vehicle_h_id' => $service_id,
                     'detail_type' => 'Upload',
@@ -228,6 +229,7 @@ class ServiceController extends Controller
                     'source' => $destinationPath,
                     'created_date' => Carbon::now(),
                     'user_created' => $request->username,
+                    'url_upload' => $urlfile
                 ];
                 DB::connection('mtr')->table('mvm.mvm_service_vehicle_d')->insert($dataUploadInsert);
     
@@ -327,8 +329,7 @@ class ServiceController extends Controller
             $file->move($destinationPath, $filename);
 
             $filePath = $destinationPath;
-            $remark = 'Uploaded by ' . $username;
-            $urlimage = env('APP_URL').'/api/v1/get-upload-service-process/'.$service_no . '-' . $key ;
+            $urlimage = env('APP_URL').'/api/v1/get-upload-service-temp-process/'.$service_no . '-' . $key ;
 
             DB::table('mvm.mvm_temp_upload_service')->insert([
                 'spk_d_id'           => $spk_d_id, 
@@ -362,9 +363,9 @@ class ServiceController extends Controller
     }
     
 
-    public function getUploadService($filename)
+    public function getUploadTempService($filename)
     {
-        Log::info('Begin getUploadService');
+        Log::info('Begin getUploadTempService');
         try {
             
             $data = DB::table('mvm.mvm_temp_upload_service')
@@ -397,7 +398,7 @@ class ServiceController extends Controller
             }
     
             $file = File::get($path);
-            Log::info('End getUploadService');
+            Log::info('End getUploadTempService');
             if (in_array($data->ext, $allowedImageExtensions)) {
                 return response($file, 200)->header('Content-Type', 'image/jpeg');
             } elseif (in_array($data->ext, $allowedVideoExtensions)) {
@@ -411,7 +412,7 @@ class ServiceController extends Controller
                 ], 400);
             }
         } catch (\Exception $e) {
-            Log::info('End getUploadService');
+            Log::info('End getUploadTempService');
             return response()->json([
                 'status'  => 500,
                 'success' => false,
@@ -420,7 +421,70 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+
+
+    public function getUploadService($filename)
+    {
+        Log::info('Begin getUploadTempService');
+        try {
+            
+            $data = DB::table('mvm.mvm_service_vehicle_d')
+            ->where('detail_type', 'Upload')
+            ->whereRaw('unique_data ILIKE ?', ["%$filename%"])
+            ->first();
     
+
+            if (empty($data)) {
+                return response()->json([
+                    'status'  => 404,
+                    'success' => false,
+                    'message' => 'File not found',
+                    'data'    => []
+                ], 404);
+            }
+    
+ 
+            $allowedImageExtensions = ['jpg', 'jpeg', 'png'];
+            $allowedVideoExtensions = ['mp4'];
+    
+            $path = $data->source.'/'.$data->unique_data;
+      
+            if (!File::exists($path)) {
+                return response()->json([
+                    'status'  => 404,
+                    'success' => false,
+                    'message' => 'File not found on server',
+                    'data'    => []
+                ], 404);
+            }
+    
+            $file = File::get($path);
+            Log::info('End getUploadTempService');
+            $fileExtension = pathinfo($data->unique_data, PATHINFO_EXTENSION);
+            if (in_array($fileExtension, $allowedImageExtensions)) {
+                return response($file, 200)->header('Content-Type', 'image/jpeg');
+            } elseif (in_array($fileExtension, $allowedVideoExtensions)) {
+                return response($file, 200)->header('Content-Type', 'video/mp4');
+            } else {
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Unsupported file type',
+                    'data'    => []
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::info('End getUploadTempService');
+            return response()->json([
+                'status'  => 500,
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data'    => []
+            ], 500);
+        }
+    }
+
+       
 
 
 }
