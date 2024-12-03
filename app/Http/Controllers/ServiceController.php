@@ -139,8 +139,162 @@ class ServiceController extends Controller
 
     public function PostServiceProcess(Request $request)
     {
+        Log::info('Begin PostServiceProcess');
+    
+        // Validasi Input
+        $validated = $this->validate($request, [
+            'param.spk_d_id'        => 'required|integer',
+            'param.tanggal_service' => 'required|date',
+            'param.nama_driver'     => 'required|string',
+            'param.last_km'         => 'required|numeric',
+            'param.mekanik'         => 'required|string',
+            'param.nama_stnk'       => 'required|string',
+            'param.nopol'           => 'required|string',
+            'param.remark_driver'   => 'required|string',
+            'param.pic_branch'      => 'required|string',
+            'param.pekerjaan_data'  => 'required',
+            'param.part_data'       => 'required',
+   
+        ]);
 
+    
+        $bengkel = DB::connection('mtr')->table('mst.mst_bengkel')
+            ->where('pic_bengkel', $request->username)
+            ->first();
+    
+        if (!$bengkel) {
+            return response()->json(['success' => false, 'message' => 'Bengkel tidak ditemukan'], 404);
+        }
+    
+        $service_no = 'MVM-' . $request->param['nopol'] . '-' . date("Ymd");
+    
+        try {
+            DB::beginTransaction();
+    
+            $service_id = DB::connection('mtr')->table('mvm.mvm_service_vehicle_h')->insertGetId([
+                'mvm_spk_d_id'   => $request->param['spk_d_id'],
+                'tanggal_service' => $request->param['tanggal_service'],
+                'nama_driver'     => $request->param['nama_driver'],
+                'last_km'         => $request->param['last_km'],
+                'mekanik'         => $request->param['mekanik'],
+                'created_date'    => Carbon::now(),
+                'user_created'    => $request->username,
+                'service_no'      => $service_no,
+                'remark_driver'   => $request->param['remark_driver'],
+                'pic_branch'      => $request->param['pic_branch'],
+            ]);
+    
+       
+            foreach ($request->param['pekerjaan_data'] as $key => $data) {
+                $datajobs = [
+                    'mvm_service_vehicle_h_id' => $service_id,
+                    'detail_type' => 'Pekerjaan',
+                    'unique_data' => $data['id'],
+                    'value_data' => $data['remark'],
+                    'source' => 'mst_price_service (Jasa)',
+                    'created_date' => date("Y-m-d H:i:s"), 
+                    'user_created' => $request->username
+                ];
+                DB::connection('mtr')->table('mvm.mvm_service_vehicle_d')->insert($datajobs);
+            }
+
+            foreach ($request->param['part_data'] as $key => $data) {
+                $datapart = [
+                    'mvm_service_vehicle_h_id' => $service_id,
+                    'detail_type' => 'Spare Part',
+                    'unique_data' => $data['id'], 
+                    'value_data' => $data['remark'],
+                    'source' => 'mst_price_service (Part)',
+                    'created_date' => date("Y-m-d H:i:s"), 
+                    'user_created' => $request->username
+                ];
+                DB::connection('mtr')->table('mvm.mvm_service_vehicle_d')->insert($datapart);
+            }
+            
+    
+            $dataUpload = DB::connection('mtr')->table('mvm.mvm_temp_upload_service')
+                ->where('spk_d_id', $request->param['spk_d_id'])
+                ->get();
+    
+    
+            foreach ($dataUpload as $data) {
+                $destinationPath = storage_path('data/service/' . date("Y") . '/' . date("m") . '/') . $service_no;
+    
+                $dataUploadInsert = [
+                    'mvm_service_vehicle_h_id' => $service_id,
+                    'detail_type' => 'Upload',
+                    'unique_data' => $data->filename . '.' . $data->ext,
+                    'value_data' => $data->remark,
+                    'source' => $destinationPath,
+                    'created_date' => Carbon::now(),
+                    'user_created' => $request->username,
+                ];
+                DB::connection('mtr')->table('mvm.mvm_service_vehicle_d')->insert($dataUploadInsert);
+    
+
+                $sourcePath = $data->path . '/' . $data->filename . '.' . $data->ext;
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                rename($sourcePath, $destinationPath . '/' . $data->filename . '.' . $data->ext);
+            }
+    
+ 
+            DB::connection('mtr')->table('mvm.mvm_spk_d')
+                ->where('id', $request->param['spk_d_id'])
+                ->update([
+                    'tanggal_service' => $request->param['tanggal_service'],
+                    'status_service' => 'SERVICE',
+                    'updated_at' =>Carbon::now(),
+                    'update_by' => $request->username,
+                ]);
+    
+    
+            DB::connection('mtr')->table('mst.mst_vehicle')
+                ->where('nopol', $request->param['nopol'])
+                ->update([
+                    'tgl_last_service' => $request->param['tanggal_service'],
+                    'nama_stnk' => $request->param['nama_stnk'],
+                    'last_km' => $request->param['last_km'],
+                    'updated_at' => Carbon::now(),
+                    'update_by' => $request->username,
+                ]);
+    
+            DB::connection('mtr')->table('mvm.mvm_gps_process')
+                ->where('nopol', $request->param['nopol'])
+                ->where('status', 'pemasangan')
+                ->whereNull('service_no')
+                ->update([
+                    'status' => 'service',
+                    'service_no' => $service_no,
+                ]);
+    
+            DB::connection('mtr')->table('mvm.mvm_service_history')->insert([
+                'mvm_service_vehicle_h_id' => $service_id,
+                'mst_bengkel_id' => $bengkel->id,
+                'pic_branch' => $request->param['pic_branch'],
+            ]);
+    
+            DB::commit();
+            Log::info('End PostServiceProcess');
+    
+
+            return response()->json([
+                'status' => 200,
+                'success' => true,
+                'message' => 'Request Success',
+                'data' => 'service_no '.$service_no
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error in PostServiceProcess: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error Submit Process: ' . $e->getMessage()], 500);
+        }
+    
+       
     }
+    
 
     public function PostUploadService(Request $request)
     {
