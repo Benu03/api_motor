@@ -161,7 +161,7 @@ class ServiceController extends Controller
             $nopol = $request->input('nopol');
 
             $service_no = 'MVM-' . $nopol . '-' . date("Ymd");
-            $destinationPath = storage_path('data/temp/service/' . date("Y") . '/' . date("m") . '/'. $service_no );
+            $destinationPath = storage_path('data/temp/service/' . date("Y") . '/' . date("m") . '/'. $service_no);
 
             if (!is_dir($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
@@ -172,8 +172,9 @@ class ServiceController extends Controller
 
             $file->move($destinationPath, $filename);
 
-            $filePath = $destinationPath . $filename;
+            $filePath = $destinationPath;
             $remark = 'Uploaded by ' . $username;
+            $urlimage = env('APP_URL').'/api/v1/get-upload-service-process/'.$filename;
 
             DB::table('mvm.mvm_temp_upload_service')->insert([
                 'spk_d_id'           => $spk_d_id, 
@@ -182,10 +183,11 @@ class ServiceController extends Controller
                 'path'         => $filePath,
                 'created_by'   => $username,
                 'created_date' => Carbon::now(),
+                'ext'    => $file->getClientOriginalExtension(),
+                'url_file' => $urlimage
             ]);
 
-
-            $data = DB::table('mvm.mvm_temp_upload_service')
+            $data = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename', 'remark', 'url_file')
                 ->where('spk_d_id', $spk_d_id)
                 ->orderBy('created_date', 'desc')
                 ->get();
@@ -203,6 +205,63 @@ class ServiceController extends Controller
         }
     }
     
+
+    public function getUploadService($filename)
+    {
+        try {
+            
+            $data = DB::table('mvm.mvm_temp_upload_service')
+                ->where('filename', $filename)
+                ->first();
+    
+
+            if (empty($data)) {
+                return response()->json([
+                    'status'  => 404,
+                    'success' => false,
+                    'message' => 'File not found',
+                    'data'    => []
+                ], 404);
+            }
+    
+ 
+            $allowedImageExtensions = ['jpg', 'jpeg', 'png'];
+            $allowedVideoExtensions = ['mp4'];
+    
+            $path = $data->path.'/'.$filename;
+
+            if (!File::exists($path)) {
+                return response()->json([
+                    'status'  => 404,
+                    'success' => false,
+                    'message' => 'File not found on server',
+                    'data'    => []
+                ], 404);
+            }
+    
+            $file = File::get($path);
+            
+            if (in_array($data->ext, $allowedImageExtensions)) {
+                return response($file, 200)->header('Content-Type', 'image/jpeg');
+            } elseif (in_array($data->ext, $allowedVideoExtensions)) {
+                return response($file, 200)->header('Content-Type', 'video/mp4');
+            } else {
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Unsupported file type',
+                    'data'    => []
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 500,
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data'    => []
+            ], 500);
+        }
+    }
     
 
 
