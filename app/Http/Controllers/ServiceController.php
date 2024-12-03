@@ -231,8 +231,8 @@ class ServiceController extends Controller
             $allowedImageExtensions = ['jpg', 'jpeg', 'png'];
             $allowedVideoExtensions = ['mp4'];
     
-            $path = $data->path.'/'.$filename.$data->ext;
-
+            $path = $data->path.'/'.$filename.'.'.$data->ext;
+      
             if (!File::exists($path)) {
                 return response()->json([
                     'status'  => 404,
