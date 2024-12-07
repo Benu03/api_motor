@@ -342,7 +342,7 @@ class ServiceController extends Controller
                 'url_file' => $urlimage
             ]);
 
-            $data = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename', 'remark', 'url_file')
+            $data = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename','ext', 'remark', 'url_file')
                 ->where('spk_d_id', $spk_d_id)
                 ->orderBy('created_date', 'desc')
                 ->get();
