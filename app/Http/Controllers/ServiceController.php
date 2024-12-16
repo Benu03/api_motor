@@ -422,6 +422,71 @@ class ServiceController extends Controller
         }
     }
 
+    
+    public function DelUploadTempService($filename)
+    {
+        Log::info('Begin DelUploadTempService');
+        try {
+            
+            $data = DB::table('mvm.mvm_temp_upload_service')
+                ->where('filename', $filename)
+                ->first();
+            
+
+            if (empty($data)) {
+                return response()->json([
+                    'status'  => 404,
+                    'success' => false,
+                    'message' => 'File not found',
+                    'data'    => []
+                ], 404);
+            }
+    
+            $filePath = $data->path . '/' . $data->filename . '.' . $data->ext;
+        
+                // Check if the file exists on the server
+                if (!File::exists($filePath)) {
+                    return response()->json([
+                        'status'  => 404,
+                        'success' => false,
+                        'message' => 'File not found on server',
+                        'data'    => []
+                    ], 404);
+                }
+
+                // Delete the file from the server
+                File::delete($filePath);
+                
+                // Delete the record from the database
+                DB::table('mvm.mvm_temp_upload_service')
+                    ->where('filename', $filename)
+                    ->delete();
+                
+                Log::info('File deleted successfully: ' . $filePath);
+
+                // Return success response
+                return response()->json([
+                    'status'  => 200,
+                    'success' => true,
+                    'message' => 'File deleted successfully',
+                    'data'    => []
+        ], 200);
+            
+        } catch (\Exception $e) {
+            Log::info('End DelUploadTempService');
+            return response()->json([
+                'status'  => 500,
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data'    => []
+            ], 500);
+        }
+    }
+
+
+
+
+
 
     public function getUploadService($filename)
     {
