@@ -236,9 +236,25 @@ class ServiceController extends Controller
 
                 $sourcePath = $data->path . '/' . $data->filename . '.' . $data->ext;
                 if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
+                    if (!is_dir($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
                 }
-                rename($sourcePath, $destinationPath . '/' . $data->filename . '.' . $data->ext);
+
+                if (file_exists($sourcePath)) {
+                    if (rename($sourcePath, $destinationPath)) {
+                        $logMessage = "Success: File moved from $sourcePath to $destinationPath.";
+                    } else {
+     
+                        $logMessage = "Error: Failed to move file from $sourcePath to $destinationPath.";
+                    }
+                } else {
+                    $logMessage = "Error: File not found in temp folder: $sourcePath.";
+                    ;
+                }
+
+
+
             }
     
  
@@ -285,7 +301,10 @@ class ServiceController extends Controller
                 'status' => 200,
                 'success' => true,
                 'message' => 'Request Success',
-                'data' => 'service_no '.$service_no
+                'data' =>  [
+                    'service_no' => $service_no,
+                    'log_message' => $logMessage 
+                ]
             ], 200);
 
         } catch (\Exception $e) {
@@ -341,6 +360,8 @@ class ServiceController extends Controller
                 'ext'    => $file->getClientOriginalExtension(),
                 'url_file' => $urlimage
             ]);
+
+
 
             $data = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename','ext', 'remark', 'url_file')
                 ->where('spk_d_id', $spk_d_id)
