@@ -238,7 +238,7 @@ class ServiceController extends Controller
                 if (!file_exists($destinationPath)) {
                  
                     if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);  w
+                        mkdir($destinationPath, 0755, true);  
                     }
                 }
             
