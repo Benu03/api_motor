@@ -236,22 +236,29 @@ class ServiceController extends Controller
 
                 $sourcePath = $data->path . '/' . $data->filename . '.' . $data->ext;
                 if (!file_exists($destinationPath)) {
+                 
                     if (!is_dir($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);
+                        mkdir($destinationPath, 0755, true);  w
                     }
                 }
+            
 
                 if (file_exists($sourcePath)) {
-                    if (rename($sourcePath, $destinationPath)) {
-                        $logMessage = "Success: File moved from $sourcePath to $destinationPath.";
+         
+                    $newDestination = $destinationPath . '/' . $data->filename . '.' . $data->ext;
+                    
+                    if (rename($sourcePath, $newDestination)) {
+               
+                        $logMessage = "Success: File moved from $sourcePath to $newDestination.";
                     } else {
-     
-                        $logMessage = "Error: Failed to move file from $sourcePath to $destinationPath.";
+               
+                        $logMessage = "Error: Failed to move file from $sourcePath to $newDestination.";
                     }
                 } else {
+
                     $logMessage = "Error: File not found in temp folder: $sourcePath.";
-                    ;
                 }
+            
 
 
 
