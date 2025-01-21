@@ -28,6 +28,9 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-upload-service-temp-process/{filename}', 'ServiceController@getUploadTempService');
                 $mtr->post('delete-upload-service-temp-process/{filename}', 'ServiceController@DelUploadTempService');
                 $mtr->post('get-upload-service-process/{filename}', 'ServiceController@getUploadService');
+                $mtr->post('get-list-upload-service-temp-process', 'ServiceController@getListUploadService');
+                
+
                 
             });
         });

@@ -513,9 +513,6 @@ class ServiceController extends Controller
 
 
 
-
-
-
     public function getUploadService($filename)
     {
         Log::info('Begin getUploadTempService');
@@ -578,6 +575,63 @@ class ServiceController extends Controller
     }
 
        
+
+    public function getListUploadService(Request $request)
+    {
+        Log::info('Begin getListUploadService');
+        $username = $request->username;
+        $spk_d_id =  $request->param['spk_d_id']; 
+
+        if (empty($username)) {
+            Log::error('Username is missing');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username is required',
+            ], 400);
+        }
+    
+
+        if (empty($spk_d_id)) {
+            Log::error('spk_d_id is missing');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'spk_d_id is required',
+            ], 400);
+        }
+    
+        if (!is_numeric($spk_d_id)) {
+            Log::error('Invalid spk_d_id format');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'spk_d_id must be a valid number',
+            ], 400);
+        }
+    
+
+        try {
+
+            $data = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename','ext', 'remark', 'url_file')
+                ->where('spk_d_id', $spk_d_id)
+                ->orderBy('created_date', 'desc')
+                ->get();
+
+                Log::info('End getListUploadService');
+            return response()->json([
+                'success' => true,
+                'message' => 'Get List uploaded successfully',
+                'data'    => $data,
+            ]);
+        } catch (\Exception $e) {
+            Log::info('End getListUploadService');
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
 
 }
