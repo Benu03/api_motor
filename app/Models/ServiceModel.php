@@ -40,9 +40,55 @@ class ServiceModel extends Model
   }
 
 
+  public static function Getpart($regional, $client)
+  {
+
+        $result = DB::table('mst.v_service_item_motor')
+        ->where('price_service_type', 'Part')
+        ->where('mst_regional_id', $regional)
+        ->where('mst_client_id', $client) 
+        ->get();
+
+        return $result;   
+  }
+
+  public static function Getjob($regional, $client)
+  {
+
+        $result = DB::table('mst.v_service_item_motor')
+        ->where('price_service_type', 'Jasa')
+        ->where('mst_regional_id', $regional)
+        ->where('mst_client_id', $client) 
+        ->get();
+
+        return $result;   
+  }
+
+
+  public static function Getgps($nopol)
+  {
+        $result = DB::table('mst.mst_vehicle_gps')
+        ->where('nopol', $nopol)
+        ->first();
+
+        return $result;   
+  }
+
+  public static function GetBengkel($username)
+  {
+
+        $result = DB::table('mst.mst_bengkel')
+        ->where('pic_bengkel', $username)
+        ->first();
+
+        return $result;   
+  }
+
+
+
+
+
   
-
-
 
 }
 

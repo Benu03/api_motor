@@ -99,23 +99,12 @@ class ServiceController extends Controller
                     ], 404);
                 }
 
-                $part = DB::connection('mtr')
-                ->table('mst.v_service_item_motor')
-                ->where('price_service_type', 'Part')
-                ->where('mst_regional_id', $dataService[0]->mst_regional_id)
-                ->where('mst_client_id', $dataService[0]->mst_client_id) 
-                ->get();
-            
-                 $jobs = DB::connection('mtr')
-                ->table('mst.v_service_item_motor')
-                ->where('price_service_type', 'Jasa')
-                ->where('mst_regional_id', $dataService[0]->mst_regional_id)
-                ->where('mst_client_id', $dataService[0]->mst_client_id)
-                ->get();
 
-                $gps = DB::connection('mtr')->table('mst.mst_vehicle_gps')
-                    ->where('nopol', $dataService[0]->nopol)
-                    ->first();
+                $part = ServiceModel::Getpart($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id);  
+            
+                $jobs = ServiceModel::Getjob($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id); 
+
+                $gps = ServiceModel::Getgps($nopol = $dataService[0]->nopol);
 
                 Log::info('End GetDetailService', [
                     'id_service' => $id_service,
@@ -158,9 +147,8 @@ class ServiceController extends Controller
         ]);
 
     
-        $bengkel = DB::connection('mtr')->table('mst.mst_bengkel')
-            ->where('pic_bengkel', $request->username)
-            ->first();
+
+        $bengkel = ServiceModel::GetBengkel($username = $request->username);  
     
         if (!$bengkel) {
             return response()->json(['success' => false, 'message' => 'Bengkel tidak ditemukan'], 404);
@@ -374,6 +362,7 @@ class ServiceController extends Controller
                 ->where('spk_d_id', $spk_d_id)
                 ->orderBy('created_date', 'desc')
                 ->get();
+            
 
                 Log::info('End PostUploadService');
             return response()->json([

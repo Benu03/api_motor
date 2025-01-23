@@ -21,6 +21,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
             
             $mtr->group(['prefix' => 'v1/'], function () use ($mtr) 
             {
+                //service bengkel
                 $mtr->post('get-list-service-bengkel', 'ServiceController@GetListService');
                 $mtr->post('get-detail-service-bengkel', 'ServiceController@GetDetailService');
                 $mtr->post('post-service-process', 'ServiceController@PostServiceProcess');
@@ -30,6 +31,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-upload-service-process/{filename}', 'ServiceController@getUploadService');
                 $mtr->post('get-list-upload-service-temp-process', 'ServiceController@getListUploadService');
                 
+                //invoice bengkel
                 $mtr->post('get-list-invoice-bengkel', 'InvoiceController@GetListInvoice');
                 
             });
