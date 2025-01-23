@@ -30,7 +30,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-upload-service-process/{filename}', 'ServiceController@getUploadService');
                 $mtr->post('get-list-upload-service-temp-process', 'ServiceController@getListUploadService');
                 
-
+                $mtr->post('get-list-invoice-bengkel', 'InvoiceController@GetListInvoice');
                 
             });
         });
