@@ -25,8 +25,29 @@ class InvoiceModel extends Model
   }
 
 
+  public static function GetServiceToinvoiceBengkel($IdBengkel)
+  {
+
+    $result = DB::table('mvm.v_service_bengkel_invoice')
+                ->select('service_no', 'branch', 'nopol','last_km','tanggal_service','jasa_name as jasa','part_name as part')
+                ->where('mst_bengkel_id',$IdBengkel)
+                ->get();
+
+    return $result;   
+  }
 
 
+  public static function getBengkel($username)
+  {
+
+    $result = DB::table('mst.mst_bengkel')
+                ->where('pic_bengkel',$username)
+                ->first();
+
+    return $result;   
+  }
+
+  
   
 
 
