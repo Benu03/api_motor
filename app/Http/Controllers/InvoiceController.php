@@ -64,6 +64,55 @@ class InvoiceController extends Controller
         ], 200);
     }
 
+    public function GetDetailInvoice(Request $request)
+    {  
+        Log::info('Begin GetDetailInvoice');
+
+        $username = $request->username;
+        $id_invoice =  $request->param['id_invoice']; 
+
+        if (empty($username)) {
+            Log::error('Username is missing');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username is required',
+            ], 400);
+        }
+    
+
+        if (empty($id_invoice)) {
+            Log::error('id_invoice is missing');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'id_invoice is required',
+            ], 400);
+        }
+    
+        if (!is_numeric($id_invoice)) {
+            Log::error('Invalid id_service format');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'id_invoice must be a valid number',
+            ], 400);
+        }
+
+
+        $detailInvoice = InvoiceModel::GetDetailinvoiceBengkel($id_invoice);  
+
+        Log::info('End GetDetailInvoice');
+        return response()->json([
+            'status'   => 200,
+            'success'  => true,
+            'message'  => 'Request Success',
+            'data'     => $detailInvoice,
+        ], 200);
+
+
+    }
+    
   
     public function GetServiceToInvoice(Request $request)
     {  

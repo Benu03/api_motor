@@ -48,8 +48,19 @@ class InvoiceModel extends Model
   }
 
   
-  
+  public static function GetDetailinvoiceBengkel($id_invoice)
+  {
 
+    $result = DB::table('mvm.v_invoice_detail_bengkel_mbl')
+                ->where('id_invoice',$id_invoice)
+                ->get();
+
+    return $result;   
+  }
+
+  
+  
+  
 
 
 }
