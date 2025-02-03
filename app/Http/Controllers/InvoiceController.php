@@ -69,7 +69,7 @@ class InvoiceController extends Controller
         Log::info('Begin GetDetailInvoice');
 
         $username = $request->username;
-        $id_invoice =  $request->param['id_invoice']; 
+        $invoice =  $request->param['invoice']; 
 
         if (empty($username)) {
             Log::error('Username is missing');
@@ -81,26 +81,17 @@ class InvoiceController extends Controller
         }
     
 
-        if (empty($id_invoice)) {
-            Log::error('id_invoice is missing');
+        if (empty($invoice)) {
+            Log::error('Invoice is missing');
             return response()->json([
                 'status'  => 400,
                 'success' => false,
-                'message' => 'id_invoice is required',
-            ], 400);
-        }
-    
-        if (!is_numeric($id_invoice)) {
-            Log::error('Invalid id_service format');
-            return response()->json([
-                'status'  => 400,
-                'success' => false,
-                'message' => 'id_invoice must be a valid number',
+                'message' => 'Invoice is required',
             ], 400);
         }
 
 
-        $detailInvoice = InvoiceModel::GetDetailinvoiceBengkel($id_invoice);  
+        $detailInvoice = InvoiceModel::GetDetailinvoiceBengkel($invoice);  
 
         Log::info('End GetDetailInvoice');
         return response()->json([
