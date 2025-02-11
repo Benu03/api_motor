@@ -14,8 +14,8 @@
 */
 
 
-// $mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
-// {
+$mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
+{
         $mtr->group(['prefix' => 'api/'], function () use ($mtr) 
         {
             
@@ -43,4 +43,4 @@
             });
         });
 
-// });
+});
