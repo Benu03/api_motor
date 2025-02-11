@@ -66,12 +66,52 @@ class InvoiceModel extends Model
       return $result;
   }
 
+  public static function CheckServiceInvoice($serviceList)
+  {
+      $result = DB::table('mvm.mvm_invoice_d')
+                  ->whereIn('service_no', $serviceList)
+                  ->pluck('service_no')
+                  ->toArray();
+
+      return $result; 
+  }
   
   
+  public static function ChekcInvoicceNo($invoice_no)
+  {
+
+    $result = DB::table('mvm.mvm_invoice_h')
+                ->where('invoice_no',$invoice_no)
+                ->first();
+
+    return $result;   
+  }
   
+
+  public static function InsertInvoiceH($dataInvoiceH)
+  {
+
+    $id = DB::table('mvm.mvm_invoice_h')->insertGetId($dataInvoiceH);
+    return $id;
+
+  }
+
+    
+  public static function GetServiceDataInvoice($invoice_no)
+  {
+
+    $result = DB::table('mvm.mvm_invoice_d')
+    ->selectRaw(" service_no, 
+                 SUM(CASE WHEN price_type = 'Jasa' THEN price_bengkel_to_ts3 ELSE 0 END) as jasa, 
+                 SUM(CASE WHEN price_type = 'Part' THEN price_bengkel_to_ts3 ELSE 0 END) as part")
+    ->where('invoice_no', $invoice_no)
+    ->groupBy('service_no')
+    ->get();
+
+
+  
+      return $result;
+  }
 
 
 }
-
-
-

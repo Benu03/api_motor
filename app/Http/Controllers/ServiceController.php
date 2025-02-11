@@ -258,7 +258,7 @@ class ServiceController extends Controller
                 ->update([
                     'tanggal_service' => $request->param['tanggal_service'],
                     'status_service' => 'SERVICE',
-                    'updated_at' =>Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'update_by' => $request->username,
                 ]);
     
