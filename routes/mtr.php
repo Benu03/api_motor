@@ -36,6 +36,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-list-service-invoice-create-bengkel', 'InvoiceController@GetServiceToInvoice');
                 $mtr->post('get-detail-invoice-bengkel', 'InvoiceController@GetDetailInvoice');
                 $mtr->post('post-invoice-process-bengkel', 'InvoiceController@PostInvoiceProcess');
+                $mtr->post('post-invoice-send-process-bengkel', 'InvoiceController@PostInvoiceSendProcess');
 
 
                 

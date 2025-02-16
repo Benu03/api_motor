@@ -92,14 +92,22 @@ class InvoiceController extends Controller
         }
 
 
-        $detailInvoice = InvoiceModel::GetDetailinvoiceBengkel($invoice);  
+
+        $invoiceData = InvoiceModel::GetInvoice($invoice);  
+        $detailInvoice =  InvoiceModel::GetServiceDataInvoiceDetail($invoice);
+        
 
         Log::info('End GetDetailInvoice');
         return response()->json([
             'status'   => 200,
             'success'  => true,
             'message'  => 'Request Success',
-            'data'     => $detailInvoice,
+            'data'     => [
+                'invoice' => $invoiceData,
+                'service_invoice' => $detailInvoice
+
+
+            ],
         ], 200);
 
 
@@ -234,7 +242,6 @@ class InvoiceController extends Controller
             ->first();
 
             DB::table('mvm.mvm_invoice_h')->where('invoice_no', $invoice_no)->update([
-                'status' =>'REQUEST',
                 'pph' => $sumTotalInvoice->pph ?? 0,
                 'jasa_total' => $sumTotalInvoice->jasa ?? 0,
                 'part_total' => $sumTotalInvoice->part ?? 0,
@@ -272,6 +279,96 @@ class InvoiceController extends Controller
     }
     
 
+    public function postInvoiceSendProcess(Request $request)
+    {
+        Log::info('Begin PostInvoiceSendProcess');
+    
+        $username = $request->username;
+        if (empty($username)) {
+            Log::error('Username is missing');
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username is required',
+            ], 400);
+        }
+    
+        $params = $request->param;
+        $invoiceNo = $params['invoice'] ?? null;
+        $process = $params['process'] ?? null;
+    
+        if (empty($invoiceNo) || empty($process)) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Invoice number and process are required',
+            ], 400);
+        }
+    
+        $CheckInvoice = InvoiceModel::ChekcInvoicceNo($invoiceNo);
+        if (!$CheckInvoice) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Invoice number does not exist',
+            ], 400);
+        }
+
+        try {
+                DB::beginTransaction();
+    
+                if ($process == 'CANCEL') {
+                    
+                    $invoiceId =  $CheckInvoice->id;
+
+                    DB::table('mvm.mvm_invoice_h')->where('id', $invoiceId)->delete();
+                    DB::table('mvm.mvm_invoice_d')->where('mvm_invoice_h_id', $invoiceId)->delete();
+
+                    return response()->json([
+                        'status'  => 200,
+                        'success' => true,
+                        'message' => 'Request Success',
+                        'data'    => null,
+                    ], 200);
+                }
+            
+                if ($process == 'SEND') {
+                    // Update status di service_h
+                    DB::table('mvm.mvm_invoice_h')->where('invoice_no', $invoiceNo)->update([
+                        'status'       => 'REQUEST',
+                        'created_date' => Carbon::now(),
+                    ]);
+            
+                    $invoiceData = InvoiceModel::getInvoiceDataRequest($invoiceNo);
+                    
+                    return response()->json([
+                        'status'  => 200,
+                        'success' => true,
+                        'message' => 'Request Success',
+                        'data'    => $invoiceData,
+                    ], 200);
+                }
+    
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Request Anda tidak valid',
+                ], 400);
+                
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Error in PostInvoiceSendProcess: ' . $e->getMessage());
+                return response()->json([
+                    'status'  => 500,
+                    'success' => false,
+                    'message' => 'Internal Server Error',
+                ], 500);
+            }
+    }
+    
+
+
+    
     
   
   
