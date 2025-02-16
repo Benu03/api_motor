@@ -4,4 +4,10 @@ Homestead.json
 Homestead.yaml
 .env
 .phpunit.result.cache
-/storage
+/storage/logs
+/storage/framework/
+/storage/data/temp/
+/storage/data/service/
+
+
+
