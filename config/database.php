@@ -42,6 +42,15 @@ return [
             'password'  => env('DB_PASSWORD_MTR', ''),
             'charset'   => 'utf8',
         ],
+        'cp' => [
+            'driver'    => env('DB_DRIVER_CP', 'pgsql'),
+            'host'      => env('DB_HOST_CP', '127.0.0.1'),
+            'port'      => env('DB_PORT_CP', 5432),
+            'database'  => env('DB_DATABASE_CP', 'forge'),
+            'username'  => env('DB_USERNAME_CP', 'forge'),
+            'password'  => env('DB_PASSWORD_CP', ''),
+            'charset'   => 'utf8',
+        ],
 
 
     ],

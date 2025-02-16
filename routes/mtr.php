@@ -14,8 +14,8 @@
 */
 
 
-$mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
-{
+// $mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
+// {
         $mtr->group(['prefix' => 'api/'], function () use ($mtr) 
         {
             
@@ -37,6 +37,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('get-detail-invoice-bengkel', 'InvoiceController@GetDetailInvoice');
                 $mtr->post('post-invoice-process-bengkel', 'InvoiceController@PostInvoiceProcess');
                 $mtr->post('post-invoice-send-process-bengkel', 'InvoiceController@PostInvoiceSendProcess');
+                $mtr->post('post-generate-pdf-invoice', 'InvoiceController@GeneratepdfInvoice');
 
 
                 
@@ -44,4 +45,4 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
             });
         });
 
-});
+// });

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\InvoiceModel;
 use DB;
+use Barryvdh\DomPDF\PDF;
 
 
 class InvoiceController extends Controller
@@ -368,7 +369,87 @@ class InvoiceController extends Controller
     
 
 
+    public function GeneratepdfInvoice(Request $request)
+    {
+
+            Log::info('Begin GeneratepdfInvoice');
+            
+            $username = $request->username;
+            if (empty($username)) {
+                Log::error('Username is missing');
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Username is required',
+                ], 400);
+            }
+
+            $params = $request->param;
+            $invoiceNo = $params['invoice'] ?? null;
+
+            if (empty($invoiceNo)) {
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Invoice number are required',
+                ], 400);
+            }
+
+         
+
+            $invoice = InvoiceModel::ChekcInvoicceNo($invoice_no = $invoiceNo);
+            if (!$invoice) {
+                return response()->json([
+                    'status'  => 400,
+                    'success' => false,
+                    'message' => 'Invoice number does not exist',
+                ], 400);
+            }
+
+
+            $invoice_detail =  InvoiceModel::InvoiceGeneratepdf($invoiceNo);
+            $bengkel =  InvoiceModel::getBengkel($username);
+            $config =  InvoiceModel::GetConfig();
     
+            $pdf = app('dompdf.wrapper');
+            $pdf->loadView('pdf/invoice_generate_bengkel', [
+                'invoice'        => $invoice,
+                'invoice_detail' => $invoice_detail,
+                'bengkel'        => $bengkel,
+                'config'         => $config
+            ])->setPaper('a4', 'landscape');
+    
+            // Render PDF
+            $pdf->render();
+            $canvas = $pdf->getDomPDF()->getCanvas();
+    
+            // Ambil ukuran halaman PDF
+            $w = $canvas->get_width();
+            $h = $canvas->get_height();
+    
+            // Tambahkan watermark (logo perusahaan)
+            $imageURL = storage_path('data/image/logo_pdf.png');
+            $imgWidth = 300;
+            $imgHeight = 200;
+    
+            // Set opacity logo watermark
+            $canvas->set_opacity(0.1);
+    
+            // Posisi tengah halaman
+            $x = ($w - $imgWidth) / 2;
+            $y = ($h - $imgHeight) / 2;
+    
+            // Tambahkan gambar watermark
+            $canvas->image($imageURL, $x, $y, $imgWidth, $imgHeight);
+    
+            // Download PDF dengan nama file sesuai invoice
+            return $pdf->download($invoice_no . '.pdf');
+
+
+            
+
+    }
+            
     
   
   

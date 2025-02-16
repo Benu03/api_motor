@@ -104,6 +104,20 @@ class InvoiceModel extends Model
     return $result;   
   }
 
+ 
+
+  public static function GetConfig()
+  {
+
+    $result = DB::connection('cp')->table('cp.konfigurasi')->first();
+
+    return $result;   
+  }
+
+  
+
+
+
   public static function GetinvoiceDataRequest($invoice_no)
   {
 
@@ -113,6 +127,16 @@ class InvoiceModel extends Model
 
     return $result;   
   }
+
+  public static function InvoiceGeneratepdf($invoiceNo)
+  {
+
+    $result = DB::table('mvm.v_invoice_generate')->where('invoice_no',$invoiceNo)->distinct()->orderby('service_no','ASC')->orderby('jasa','ASC')->get();
+
+    return $result;   
+  }
+
+
 
   
 

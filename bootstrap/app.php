@@ -63,6 +63,14 @@ $app->configure('app');
 $app->configure('database');
 $app->configure('message');
 $app->configure('mail');
+$app->withFacades();
+$app->withEloquent();
+
+// Registrasi Service Provider
+$app->register(Barryvdh\DomPDF\ServiceProvider::class);
+
+// Alias untuk Facade (WAJIB jika ingin pakai PDF::loadView())
+
 
 /*
 |--------------------------------------------------------------------------
@@ -109,6 +117,7 @@ $app->routeMiddleware([
 
 $app->register(Illuminate\Mail\MailServiceProvider::class);
 class_alias(Illuminate\Support\Facades\Mail::class, 'Mail');
+
 
 /*
 |--------------------------------------------------------------------------
