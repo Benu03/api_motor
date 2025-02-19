@@ -13,9 +13,9 @@ use DB;
 class ReportController extends Controller
 {
 
-    public function HistoryService(Request $request)
+    public function HistoryServiceBengkel(Request $request)
     {
-        Log::info('Begin HistoryService');
+        Log::info('Begin HistoryServiceBengkel');
     
         $username = $request->username;
         if (empty($username)) {
@@ -52,7 +52,7 @@ class ReportController extends Controller
     
         $service = $query->get();
     
-        Log::info('End HistoryService');
+        Log::info('End HistoryServiceBengkel');
     
         return response()->json([
             'status'  => 200,
@@ -63,9 +63,9 @@ class ReportController extends Controller
     }
     
 
-    public function Invoice(Request $request)
+    public function InvoiceBengkel(Request $request)
     {  
-        Log::info('Begin Invoice');
+        Log::info('Begin InvoiceBengkel');
     
         // Validasi username
         $username = $request->username;
@@ -96,7 +96,7 @@ class ReportController extends Controller
     
         $invoiceList = $query->get();
     
-        Log::info('End Invoice');
+        Log::info('End InvoiceBengkel');
     
         return response()->json([
             'status'  => 200,
