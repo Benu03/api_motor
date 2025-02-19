@@ -40,6 +40,14 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('post-generate-pdf-invoice', 'InvoiceController@GeneratepdfInvoice');
 
 
+
+                $mtr->group(['prefix' => 'report/'], function () use ($mtr) 
+                {
+                    $mtr->post('history-service', 'ReportController@HistoryService');
+                    $mtr->post('invoice', 'ReportController@Invoice');
+
+                });
+
                 
                 
             });
