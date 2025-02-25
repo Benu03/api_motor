@@ -14,6 +14,7 @@
 */
 
 
+
 $mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
 {
         $mtr->group(['prefix' => 'api/'], function () use ($mtr) 
@@ -40,17 +41,17 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 $mtr->post('post-generate-pdf-invoice', 'InvoiceController@GeneratepdfInvoice');
 
 
-
                 $mtr->group(['prefix' => 'report/'], function () use ($mtr) 
                 {
                     $mtr->post('history-service-bengkel', 'ReportController@HistoryServiceBengkel');
+                    $mtr->post('history-service-bengkel-detail', 'ReportController@HistoryServiceBengkelDetail');
                     $mtr->post('invoice-bengkel', 'ReportController@InvoiceBengkel');
+                    $mtr->post('invoice-bengkel-detail', 'ReportController@InvoiceBengkelDetail');
 
                 });
 
-                
-                
             });
         });
 
 });
+$mtr->get('api/v1/get-image-service-detail/{data}', 'ReportController@GetImageServiceDetail');
