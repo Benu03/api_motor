@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use DB;
 use App\Models\ServiceModel;
+use Illuminate\Support\Facades\Cache;
 
 class ReportController extends Controller
 {
@@ -32,22 +33,27 @@ class ReportController extends Controller
         $start_date = $params['start_date'] ?? null;
         $end_date = $params['end_date'] ?? null;
     
-        $usebengkel = DB::table('mst.mst_bengkel')->where('pic_bengkel', $username)->first();
     
-        if (!$usebengkel) {
-            Log::error("Bengkel not found for username: $username");
-            return response()->json([
-                'status'  => 404,
-                'success' => false,
-                'message' => 'Bengkel not found',
-            ], 404);
-        }
- 
-        $query = DB::table('mvm.v_spk_detail')
-                    ->select('id', 'nopol', 'status_service','tanggal_service','tanggal_schedule','tgl_last_service')
-                    ->where('spk_status','ONPROGRESS')
-                    ->where('mst_bengkel_id',$usebengkel->id)
-                    ->orderBy('tanggal_schedule', 'desc');
+        $query = DB::table('mvm.mvm_service_vehicle_h')
+        ->select([
+            'id as id_service',
+            'service_no',
+            'mvm_spk_d_id',
+            'tanggal_service',
+            'nama_driver',
+            'last_km',
+            'mekanik',
+            'user_created',
+            'created_date',
+            'remark_driver',
+            'pic_branch',
+            'remark_pic_branch',
+            'pic_branch_date_post',
+            'remark_admin_client',
+            'admin_client_date_post'
+        ])
+        ->where('user_created', $username)
+        ->orderBy('tanggal_service', 'desc');
 
                     
 
@@ -70,6 +76,7 @@ class ReportController extends Controller
     }
     
 
+
     public function HistoryServiceBengkelDetail(Request $request)
     {
         Log::info('Begin HistoryServiceBengkelDetail');
@@ -84,10 +91,8 @@ class ReportController extends Controller
             ], 400);
         }
     
-        // $serviceno = $params['service_no']
-
-        $id_service =  $request->param['id_service']; 
-
+        $id_service = $request->param['id_service'] ?? null; 
+    
         if (empty($id_service)) {
             Log::error('id_service is missing');
             return response()->json([
@@ -96,53 +101,96 @@ class ReportController extends Controller
                 'message' => 'id_service No is required',
             ], 400);
         }
-
-       
-        $dataService = ServiceModel::GetDetailServiceBengkel($username, $id_service);  
-
-                    
-                if (empty($dataService)) {
-                    Log::error('Data service not found for ID: ' . $id_service);
-                    return response()->json([
-                        'status' => 404,
-                        'success' => false,
-                        'message' => 'Service data not found',
-                        'data' => []
-                    ], 404);
-                }
-
-
-                $part = ServiceModel::Getpart($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id);  
-            
-                $jobs = ServiceModel::Getjob($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id); 
-
-                $upload = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename','ext', 'remark', 'url_file')
-                ->where('spk_d_id', $id_service)
-                ->orderBy('created_date', 'desc')
-                ->get();
-
-
-
-                $gps = ServiceModel::Getgps($nopol = $dataService[0]->nopol);
-
-                Log::info('End GetDetailService', [
-                    'id_service' => $id_service,
-                    'username' => $username
-                ]);
-
-                return response()->json([
-                    'status' => 200,
-                    'success' => true,
-                    'message' => 'Request Success',
-                    'data' => [
-                        'service' => $dataService,
-                        'part' => $part,
-                        'jobs' => $jobs,
-                        'upload' => $upload,
-                        'gps' => $gps
-                    ]
-                ], 200);
+    
+        // Gunakan cache untuk menghindari query berulang jika data tidak berubah
+        $cacheKey = "service_detail_{$id_service}";
+        $dataService = Cache::remember($cacheKey, 300, function () use ($id_service) {
+            return DB::table('mvm.mvm_service_vehicle_h')
+                ->select([
+                    'id as id_service',
+                    'service_no',
+                    'mvm_spk_d_id',
+                    'tanggal_service',
+                    'nama_driver',
+                    'last_km',
+                    'mekanik',
+                    'user_created',
+                    'created_date',
+                    'remark_driver',
+                    'pic_branch',
+                    'remark_pic_branch',
+                    'pic_branch_date_post',
+                    'remark_admin_client',
+                    'admin_client_date_post'
+                ])
+                ->where('id', $id_service)
+                ->first();
+        });
+    
+        if (!$dataService) {
+            Log::error('Data service not found for ID: ' . $id_service);
+            return response()->json([
+                'status' => 404,
+                'success' => false,
+                'message' => 'Service data not found',
+                'data' => []
+            ], 404);
+        }
+    
+        $part = DB::table('mvm.mvm_service_vehicle_d as a')
+        ->leftJoin('mst.mst_price_service as b', DB::raw('CAST(a.unique_data AS BIGINT)'), '=', 'b.id')
+        ->select([
+            DB::raw('CAST(a.unique_data AS BIGINT) AS id'),
+            'b.kode_new',
+            'b.service_name',
+            'a.value_data AS remark'
+        ])
+        ->where('a.detail_type', 'Spare Part')
+        ->where('a.mvm_service_vehicle_h_id', $id_service)
+        ->get();
+    
+    // Query Pekerjaan
+    $jobs = DB::table('mvm.mvm_service_vehicle_d as a')
+        ->leftJoin('mst.mst_price_service as b', DB::raw('CAST(a.unique_data AS BIGINT)'), '=', 'b.id')
+        ->select([
+            DB::raw('CAST(a.unique_data AS BIGINT) AS id'),
+            'b.kode_new',
+            'b.service_name',
+            'a.value_data AS remark'
+        ])
+        ->where('a.detail_type', 'Pekerjaan')
+        ->where('a.mvm_service_vehicle_h_id', $id_service)
+        ->get();
+    
+        // Query Upload
+        $upload = DB::table('mvm.mvm_service_vehicle_d')
+            ->select([
+                'unique_data as file_name',
+                'value_data as remark',
+                'url_upload'
+            ])
+            ->where('detail_type', 'Upload')
+            ->where('mvm_service_vehicle_h_id', $id_service)
+            ->get();
+    
+        Log::info('End GetDetailService', [
+            'id_service' => $id_service,
+            'username' => $username
+        ]);
+    
+        return response()->json([
+            'status' => 200,
+            'success' => true,
+            'message' => 'Request Success',
+            'data' => [
+                'service' => $dataService,
+                'part' => $part,
+                'jobs' => $jobs,
+                'upload' => $upload,
+            ]
+        ], 200);
     }
+    
 
     public function InvoiceBengkel(Request $request)
     {  
