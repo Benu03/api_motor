@@ -138,7 +138,7 @@ class ReportController extends Controller
                         'service' => $dataService,
                         'part' => $part,
                         'jobs' => $jobs,
-                        // 'upload' => $upload,
+                        'upload' => $upload,
                         'gps' => $gps
                     ]
                 ], 200);
