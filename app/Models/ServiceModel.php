@@ -64,6 +64,7 @@ class ServiceModel extends Model
         return $result;   
   }
 
+ 
 
   public static function Getgps($nopol)
   {
@@ -91,6 +92,3 @@ class ServiceModel extends Model
   
 
 }
-
-
-

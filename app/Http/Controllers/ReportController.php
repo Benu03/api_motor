@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use DB;
+use App\Models\ServiceModel;
 
 class ReportController extends Controller
 {
@@ -41,16 +42,22 @@ class ReportController extends Controller
                 'message' => 'Bengkel not found',
             ], 404);
         }
-    
-        $query = DB::table('mvm.v_service_history')
-                ->where('mst_bengkel_id', $usebengkel->id)
-                ->orderBy('id', 'desc'); 
+ 
+        $query = DB::table('mvm.v_spk_detail')
+                    ->select('id', 'nopol', 'status_service','tanggal_service','tanggal_schedule','tgl_last_service')
+                    ->where('spk_status','ONPROGRESS')
+                    ->where('mst_bengkel_id',$usebengkel->id)
+                    ->orderBy('tanggal_schedule', 'desc');
+
+                    
 
         if ($start_date && $end_date) {
              $query->whereBetween('tanggal_service', [$start_date, $end_date]);
         }
     
         $service = $query->get();
+
+
     
         Log::info('End HistoryServiceBengkel');
     
@@ -77,39 +84,64 @@ class ReportController extends Controller
             ], 400);
         }
     
-        $params = $request->param;
-        $serviceno = $params['service_no'];
+        // $serviceno = $params['service_no']
 
-        if (empty($serviceno)) {
-            Log::error('Username is missing');
+        $id_service =  $request->param['id_service']; 
+
+        if (empty($id_service)) {
+            Log::error('id_service is missing');
             return response()->json([
                 'status'  => 400,
                 'success' => false,
-                'message' => 'Service No is required',
+                'message' => 'id_service No is required',
             ], 400);
         }
 
-        
-        $query = DB::table('mvm.v_service_history')->where('service_no', $serviceno)->first();
-        $sdetail  = DB::table('mvm.v_service_detail_history')->where('id',$query->mvm_service_vehicle_h_id)->get();
-        
-        $sdetail = $sdetail->map(function ($item) {
-            if ($item->detail_type == 'Upload') {
-                $item->url = env('APP_URL') . '/api/v1/get-image-service-detail/' . $item->unique_data;
-            } else {
-                $item->url = null;
-            }
-            return $item;
-        });
+       
+        $dataService = ServiceModel::GetDetailServiceBengkel($username, $id_service);  
 
-        Log::info('End HistoryServiceBengkelDetail');
-    
-        return response()->json([
-            'status'  => 200,
-            'success' => true,
-            'message' => 'Request Success',
-            'data'    => [ 'service' => $query, 'detail_service' =>  $sdetail],
-        ], 200);
+                    
+                if (empty($dataService)) {
+                    Log::error('Data service not found for ID: ' . $id_service);
+                    return response()->json([
+                        'status' => 404,
+                        'success' => false,
+                        'message' => 'Service data not found',
+                        'data' => []
+                    ], 404);
+                }
+
+
+                $part = ServiceModel::Getpart($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id);  
+            
+                $jobs = ServiceModel::Getjob($regional = $dataService[0]->mst_regional_id, $client = $dataService[0]->mst_client_id); 
+
+                $upload = DB::table('mvm.mvm_temp_upload_service')->select('spk_d_id', 'filename','ext', 'remark', 'url_file')
+                ->where('spk_d_id', $id_service)
+                ->orderBy('created_date', 'desc')
+                ->get();
+
+
+
+                $gps = ServiceModel::Getgps($nopol = $dataService[0]->nopol);
+
+                Log::info('End GetDetailService', [
+                    'id_service' => $id_service,
+                    'username' => $username
+                ]);
+
+                return response()->json([
+                    'status' => 200,
+                    'success' => true,
+                    'message' => 'Request Success',
+                    'data' => [
+                        'service' => $dataService,
+                        'part' => $part,
+                        'jobs' => $jobs,
+                        // 'upload' => $upload,
+                        'gps' => $gps
+                    ]
+                ], 200);
     }
 
     public function InvoiceBengkel(Request $request)
