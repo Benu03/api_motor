@@ -39,6 +39,7 @@ class ReportController extends Controller
             'id as id_service',
             'service_no',
             'nopol',
+            'status_service',
             'tanggal_service',
             'tgl_last_service'
         ])
