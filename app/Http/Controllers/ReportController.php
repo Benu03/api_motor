@@ -105,24 +105,7 @@ class ReportController extends Controller
         // Gunakan cache untuk menghindari query berulang jika data tidak berubah
         $cacheKey = "service_detail_{$id_service}";
         $dataService = Cache::remember($cacheKey, 300, function () use ($id_service) {
-            return DB::table('mvm.mvm_service_vehicle_h')
-                ->select([
-                    'id as id_service',
-                    'service_no',
-                    'mvm_spk_d_id',
-                    'tanggal_service',
-                    'nama_driver',
-                    'last_km',
-                    'mekanik',
-                    'user_created',
-                    'created_date',
-                    'remark_driver',
-                    'pic_branch',
-                    'remark_pic_branch',
-                    'pic_branch_date_post',
-                    'remark_admin_client',
-                    'admin_client_date_post'
-                ])
+            return DB::table('mvm.mvm_v_history_detail_new')
                 ->where('id', $id_service)
                 ->first();
         });
