@@ -34,23 +34,13 @@ class ReportController extends Controller
         $end_date = $params['end_date'] ?? null;
     
     
-        $query = DB::table('mvm.mvm_service_vehicle_h')
+        $query = DB::table('mvm.mvm_v_history_detail_new')
         ->select([
             'id as id_service',
             'service_no',
-            'mvm_spk_d_id',
+            'nopol',
             'tanggal_service',
-            'nama_driver',
-            'last_km',
-            'mekanik',
-            'user_created',
-            'created_date',
-            'remark_driver',
-            'pic_branch',
-            'remark_pic_branch',
-            'pic_branch_date_post',
-            'remark_admin_client',
-            'admin_client_date_post'
+            'tgl_last_service'
         ])
         ->where('user_created', $username)
         ->orderBy('tanggal_service', 'desc');
