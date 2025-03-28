@@ -51,10 +51,25 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                 });
 
                 
-
+                $mtr->get('bantuan', 'FetchController@getBantuan');
                 $mtr->get('list-promo', 'FetchController@getListPromo');
                 $mtr->get('list-katalog', 'FetchController@getListKatalog');
-                $mtr->post('user-position', 'FetchController@UserPositioin');
+                $mtr->post('user-position', 'UsersAssetController@UserPositioin');
+
+
+                
+                $mtr->group(['prefix' => 'user/'], function () use ($mtr) 
+                {
+                    $mtr->post('list-vehicle', 'UsersAssetController@UserListVehicle');
+                    $mtr->post('post-position', 'UsersAssetController@UserPositioin');
+                    $mtr->post('detail-vehicle/{id}', 'UsersAssetController@UserVehicleDetail');
+                    $mtr->post('delete-vehicle', 'UsersAssetController@UserDeleteVehicle');
+                    
+                });
+
+
+
+               
 
 
             });

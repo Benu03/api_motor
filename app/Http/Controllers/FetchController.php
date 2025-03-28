@@ -91,40 +91,24 @@ class FetchController extends Controller
     }
 
    
-    public function UserPositioin(Request $request)
-    {  
-        Log::info('Begin UserPositioin');
-        $username = $request->input('username'); 
-        $params   = $request->input('param'); 
-        $lat      = $params['lat'] ?? null; 
-        $lon      = $params['lon'] ?? null; 
-    
-        if (empty($username) || empty($lat) || empty($lon)) {
-            return response()->json([
-                'status'  => 400,
-                'success' => false,
-                'message' => 'Username and position are required',
-            ], 400);
-        }
-
-
      
-        DB::table('mst.mst_user_access')
-        ->where('username', $username)
-        ->update(['lat' => $lat, 'lon' => $lon]);
 
+    public function getBantuan(Request $request)
+    {  
+      
+        Log::info('Begin getBantuan');
 
-        Log::info('End UserPositioin');
+        $Bantuan = DB::table('mst.mst_bantuan')->where('is_active', true)->get();
+        Log::info('End getBantuan');
     
         return response()->json([
             'status'   => 200,
             'success'  => true,
-            'message' => 'Location updated successfully',
-            'data'     =>[]
+            'message'  => 'Request Success',
+            'data'     => $Bantuan,
         ], 200);
-
     }
-  
+
   
 
 
