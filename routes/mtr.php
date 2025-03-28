@@ -64,12 +64,10 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                     $mtr->post('post-position', 'UsersAssetController@UserPositioin');
                     $mtr->post('detail-vehicle/{id}', 'UsersAssetController@UserVehicleDetail');
                     $mtr->post('delete-vehicle', 'UsersAssetController@UserDeleteVehicle');
+                    $mtr->post('list-bengkel-distance', 'UsersAssetController@GetBengkelDistance');
                     
                 });
 
-
-
-               
 
 
             });
