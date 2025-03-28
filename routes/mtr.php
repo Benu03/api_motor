@@ -50,6 +50,13 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
 
                 });
 
+                
+
+                $mtr->get('list-promo', 'FetchController@getListPromo');
+                $mtr->get('list-katalog', 'FetchController@getListKatalog');
+                $mtr->post('user-position', 'FetchController@UserPositioin');
+
+
             });
         });
 
