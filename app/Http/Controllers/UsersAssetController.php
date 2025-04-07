@@ -145,73 +145,66 @@ class UsersAssetController extends Controller
         ], 404);
     }
 
-    // public function GetBengkelDistance(Request $request)
-    // {
-    //     Log::info('Begin GetBengkelDistance');
     
-    //     $username = $request->input('username'); 
-    //     $params   = $request->input('param'); 
-    //     $lat      = $params['lat'] ?? null; 
-    //     $lon      = $params['lon'] ?? null; 
+
+    public function GetBengkelName(Request $request)
+    {
+        Log::info('Begin GetBengkelName');
     
-    //     if (empty($username) || empty($lat) || empty($lon)) {
-    //         return response()->json([
-    //             'status'  => 400,
-    //             'success' => false,
-    //             'message' => 'Username and position are required',
-    //         ], 400);
-    //     }
-        
+        $username = $request->input('username'); 
+        $params   = $request->input('param'); 
+        $name     = $params['name'] ?? null; 
+        $lat      = $params['lat'] ?? null; 
+        $lon      = $params['lon'] ?? null; 
+    
+        // Validasi input
+        if (empty($username) || empty($lat) || empty($lon)) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username and position are required',
+            ], 400);
+        }
+    
+        if (empty($name)) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Name must be empty',
+            ], 400);
+        }    
 
-    //     $bengkels = DB::table('mst.mst_user_access')
-    //               ->where('role', 'BENGKEL')
-    //               ->get(['lat', 'lon', 'fullname','username']); 
-
-    //     $distances = [];
-
-    //     foreach ($bengkels as $bengkel) {
-    //         $bengkelLat = $bengkel->lat;
-    //         $bengkelLon = $bengkel->lon;
-
-    //         try {
-                
-    //             $url = "http://router.project-osrm.org/route/v1/driving/{$lon},{$lat};{$bengkelLon},{$bengkelLat}?overview=false";
-
-    //             $response = Http::timeout(10)->get($url);
-
-    //             if (!$response->successful()) {
-    //                 continue; // Lewati jika gagal
-    //             }
-
-    //             $data = $response->json();
-    //             $distance_km = !empty($data['routes']) ? $data['routes'][0]['distance'] / 1000 : null;
-
-    //             // Simpan hasil ke array
-    //             $distances[] = [
-    //                 'username' => $bengkel->username,
-    //                 'name'     => $bengkel->fullname,
-    //                 'lat'      => $bengkelLat,
-    //                 'lon'      => $bengkelLon,
-    //                 'distance' => $distance_km,
-    //             ];
-    //         } catch (\Exception $e) {
-    //             Log::error("Error fetching distance for {$bengkel->username}: " . $e->getMessage());
-    //         }
-    //     }
-
-    //     usort($distances, fn($a, $b) => $a['distance'] <=> $b['distance']);
-
-    //     $top8 = array_slice($distances, 0, 8);
-
-    //     Log::info('End GetBengkelDistance');
-
-    //     return response()->json([
-    //         'status'   => 200,
-    //         'success'  => true,
-    //         'message'  => 'Request Success',
-    //         'data' => $top8,
-    //     ], 200);
-    // }
+        $bengkels = DB::select("
+            SELECT username, fullname, lat, lon, address,
+                (6371 * acos(
+                    cos((? * PI() / 180)) * cos((lat::FLOAT * PI() / 180)) 
+                    * cos((lon::FLOAT * PI() / 180) - (? * PI() / 180)) 
+                    + sin((? * PI() / 180)) * sin((lat::FLOAT * PI() / 180))
+                )) AS distance
+            FROM mst.mst_user_access
+            WHERE fullname ILIKE ?
+            and role = 'BENGKEL'
+            ORDER BY distance ASC 
+                LIMIT 10
+        ", [$lat, $lon, $lat, "%$name%"]); // gunakan ILIKE untuk pencarian case-insensitive
+    
+        Log::info('End GetBengkelName');
+    
+        if (empty($bengkels)) {
+            return response()->json([
+                'status'  => 404,
+                'success' => false,
+                'message' => 'No nearby workshops found',
+            ], 404);
+        }
+    
+        return response()->json([
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Request Success',
+            'data'    => $bengkels,
+        ], 200);
+    }
     
 
     public function GetBengkelDistance(Request $request)
@@ -237,7 +230,7 @@ class UsersAssetController extends Controller
                         cos((? * PI() / 180)) * cos((lat::FLOAT * PI() / 180)) 
                         * cos((lon::FLOAT * PI() / 180) - (? * PI() / 180)) 
                         + sin((? * PI() / 180)) * sin((lat::FLOAT * PI() / 180))
-                    )) AS distance
+                    )) AS distance,address
                 FROM mst.mst_user_access
                 WHERE role = 'BENGKEL'
                 ORDER BY distance ASC
@@ -261,6 +254,135 @@ class UsersAssetController extends Controller
             'data'    => $bengkels,
         ], 200);
     }
+    
+
+    public function UserAddVehicle(Request $request)
+    {
+        Log::info('Begin UserAddVehicle');
+    
+        $username = $request->input('username');
+        $params   = $request->input('param');
+    
+        $nopol      = $params['nopol'] ?? null;
+        $no_rangka  = $params['no_rangka'] ?? null;
+        $no_mesin   = $params['no_mesin'] ?? null;
+        $tipe       = $params['tipe'] ?? null;
+        $tahun      = $params['tahun'] ?? null;
+    
+        // Validasi username dan nopol
+        if (empty($username) || empty($nopol)) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username dan Nopol wajib diisi',
+            ], 400);
+        }
+    
+        // Normalisasi nopol (hilangkan spasi dan ubah ke huruf besar)
+        $nopol_normalized = strtoupper(str_replace(' ', '', $nopol));
+    
+        // Cek apakah kendaraan sudah pernah didaftarkan
+        $CheckNopol = DB::table('mst.mst_user_vehicle')
+            ->where('username', $username)
+            ->whereRaw("REPLACE(UPPER(nopol), ' ', '') = ?", [$nopol_normalized])
+            ->first();
+    
+        if ($CheckNopol) {
+            return response()->json([
+                'status'   => 400,
+                'success'  => false,
+                'message'  => 'Kendaraan Anda sudah terdaftar',
+                'data'     => $CheckNopol,
+            ], 400);
+        }
+    
+        // Jika belum, simpan data kendaraan
+        DB::table('mst.mst_user_vehicle')->insert([
+            'username'   => $username,
+            'nopol'      => $nopol_normalized,
+            'norangka'  => $no_rangka,
+            'nomesin'   => $no_mesin,
+            'type'       => $tipe,
+            'tahun'      => $tahun,
+            'created_date' =>  Carbon::now(),
+            'create_by' => $username,
+        ]);
+    
+
+        $ListVehicle = DB::table('mst.mst_user_vehicle')
+            ->where('username', $username)
+            ->get();
+    
+        Log::info('End UserAddVehicle');
+    
+        return response()->json([
+            'status'   => 200,
+            'success'  => true,
+            'message'  => 'Kendaraan berhasil ditambahkan',
+            'data'     => $ListVehicle,
+        ], 200);
+    }
+
+
+    public function UsereditVehicle(Request $request)
+    {
+        Log::info('Begin UsereditVehicle');
+    
+        $username = $request->input('username');
+        $params   = $request->input('param');
+    
+        $nopol      = $params['nopol'] ?? null;
+        $no_rangka  = $params['no_rangka'] ?? null;
+        $no_mesin   = $params['no_mesin'] ?? null;
+        $tipe       = $params['tipe'] ?? null;
+        $tahun      = $params['tahun'] ?? null;
+    
+        // Validasi username dan nopol
+        if (empty($username) || empty($nopol)) {
+            return response()->json([
+                'status'  => 400,
+                'success' => false,
+                'message' => 'Username dan Nopol wajib diisi',
+            ], 400);
+        }
+    
+        // Normalisasi nopol (hilangkan spasi dan ubah ke huruf besar)
+        $nopol_normalized = strtoupper(str_replace(' ', '', $nopol));
+    
+        // Update kendaraan
+        $affected = DB::table('mst.mst_user_vehicle')
+            ->whereRaw("REPLACE(UPPER(nopol), ' ', '') = ?", [$nopol_normalized])
+            ->where('username', $username)
+            ->update([
+                'norangka'   => $no_rangka,
+                'nomesin'    => $no_mesin,
+                'type'        => $tipe,
+                'tahun'       => $tahun,
+
+            ]);
+    
+        if ($affected === 0) {
+            return response()->json([
+                'status'  => 404,
+                'success' => false,
+                'message' => 'Kendaraan tidak ditemukan atau data tidak berubah',
+            ], 404);
+        }
+    
+        $ListVehicle = DB::table('mst.mst_user_vehicle')
+            ->where('username', $username)
+            ->get();
+    
+        Log::info('End UsereditVehicle');
+    
+        return response()->json([
+            'status'   => 200,
+            'success'  => true,
+            'message'  => 'Kendaraan berhasil diperbarui',
+            'data'     => $ListVehicle,
+        ], 200);
+    }
+    
     
 
 }
