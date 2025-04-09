@@ -70,6 +70,11 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
 
                     $mtr->post('add-vehicle', 'UsersAssetController@UserAddVehicle');
                     $mtr->post('edit-vehicle', 'UsersAssetController@UsereditVehicle');
+
+
+                    $mtr->post('list-service', 'TransactionController@ListServiceUser');
+                    $mtr->post('order-service', 'TransactionController@OrderServiceUser');
+                    
                     
                 });
 

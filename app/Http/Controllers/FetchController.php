@@ -25,8 +25,8 @@ class FetchController extends Controller
         Log::info('Begin getListPromo');
 
         $promoPath = base_path('public/image/promo');
-        $promoUrl  = url('/image/promo');
-        $promoList = [];
+
+        $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
     
         if (file_exists($promoPath) && is_dir($promoPath)) {
             $files = scandir($promoPath); // Ambil daftar file dalam folder
@@ -35,7 +35,7 @@ class FetchController extends Controller
                 if ($file !== '.' && $file !== '..' && is_file($promoPath . '/' . $file)) {
                     $promoList[] = [
                         'filename' => $file,
-                        'url'      => $promoUrl . '/' . $file
+                        'url'      => $promoBaseUrl . '/' . $file
                     ];
                 }
             }
@@ -60,7 +60,8 @@ class FetchController extends Controller
         Log::info('Begin getListKatalog');
 
         $promoPath = base_path('public/image/katalog');
-        $promoUrl  = url('/image/katalog');
+        // $promoUrl  = url('/image/katalog');
+        $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
         $promoList = [];
     
         if (file_exists($promoPath) && is_dir($promoPath)) {
@@ -72,7 +73,7 @@ class FetchController extends Controller
                         'filename' => $file,
                         'desc' =>  "dummy data product",
                         'desc' =>  756000,
-                        'url'      => $promoUrl . '/' . $file
+                        'url'      => $promoBaseUrl . '/' . $file
                     ];
                 }
             }
