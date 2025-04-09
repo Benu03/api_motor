@@ -26,7 +26,9 @@ class FetchController extends Controller
 
         $promoPath = base_path('public/image/promo');
 
-        $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
+        // $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
+        
+        $promoBaseUrl = env('APP_URL') . '/image/promo';
     
         if (file_exists($promoPath) && is_dir($promoPath)) {
             $files = scandir($promoPath); // Ambil daftar file dalam folder
@@ -60,8 +62,9 @@ class FetchController extends Controller
         Log::info('Begin getListKatalog');
 
         $promoPath = base_path('public/image/katalog');
-        // $promoUrl  = url('/image/katalog');
-        $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
+        // $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
+                
+        $promoBaseUrl = env('APP_URL') . '/image/promo';
         $promoList = [];
     
         if (file_exists($promoPath) && is_dir($promoPath)) {
