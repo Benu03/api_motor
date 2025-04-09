@@ -64,7 +64,7 @@ class FetchController extends Controller
         $promoPath = base_path('public/image/katalog');
         // $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
                 
-        $promoBaseUrl = env('APP_URL') . '/image/promo';
+        $promoBaseUrl = env('APP_URL') . '/image/katalog';
         $promoList = [];
     
         if (file_exists($promoPath) && is_dir($promoPath)) {
