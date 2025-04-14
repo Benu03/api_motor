@@ -24,29 +24,25 @@ class FetchController extends Controller
       
         Log::info('Begin getListPromo');
 
-        $promoPath = base_path('public/image/promo');
-
-        // $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
-        
         $promoBaseUrl = env('APP_URL') . '/image/promo';
+
+        $data = DB::table('mst.mst_promo')
+            ->where('is_active', true)
+            ->get();
     
-        if (file_exists($promoPath) && is_dir($promoPath)) {
-            $files = scandir($promoPath); // Ambil daftar file dalam folder
+        $promoList = [];
     
-            foreach ($files as $file) {
-                if ($file !== '.' && $file !== '..' && is_file($promoPath . '/' . $file)) {
-                    $promoList[] = [
-                        'filename' => $file,
-                        'url'      => $promoBaseUrl . '/' . $file
-                    ];
-                }
-            }
-        } else {
-            Log::warning('Folder promo tidak ditemukan atau bukan direktori.');
+        foreach ($data as $promo) {
+            $promoList[] = [
+                'id'       => $promo->id,
+                'title'    => $promo->title,
+                'filename' => $promo->file_name,
+                'url'      => $promoBaseUrl . '/' . $promo->file_name
+            ];
         }
     
         Log::info('End getListPromo');
-    
+ 
         return response()->json([
             'status'   => 200,
             'success'  => true,
@@ -61,28 +57,28 @@ class FetchController extends Controller
       
         Log::info('Begin getListKatalog');
 
-        $promoPath = base_path('public/image/katalog');
-        // $promoBaseUrl = request()->getSchemeAndHttpHost() . '/image/promo';
+     
                 
-        $promoBaseUrl = env('APP_URL') . '/image/katalog';
-        $promoList = [];
-    
-        if (file_exists($promoPath) && is_dir($promoPath)) {
-            $files = scandir($promoPath); // Ambil daftar file dalam folder
-    
-            foreach ($files as $file) {
-                if ($file !== '.' && $file !== '..' && is_file($promoPath . '/' . $file)) {
-                    $promoList[] = [
-                        'filename' => $file,
-                        'desc' =>  "dummy data product",
-                        'desc' =>  756000,
-                        'url'      => $promoBaseUrl . '/' . $file
-                    ];
-                }
-            }
-        } else {
-            Log::warning('Folder katalog tidak ditemukan atau bukan direktori.');
+        $katalogBaseUrl = env('APP_URL') . '/image/katalog';
+
+        $data = DB::table('mst.mst_katalog')
+        ->where('is_active', true)
+        ->get();
+
+
+        $katalogList = [];
+
+        foreach ($data as $katalog) {
+            $katalogList[] = [
+                'id'       => $katalog->id,
+                'title'    => $katalog->title,
+                'harga' => $katalog->harga,
+                'filename' => $katalog->file_name,
+                'url'      => $katalogBaseUrl . '/' . $katalog->file_name
+            ];
         }
+    
+      
     
         Log::info('End getListKatalog');
     
@@ -90,7 +86,7 @@ class FetchController extends Controller
             'status'   => 200,
             'success'  => true,
             'message'  => 'Request Success',
-            'data'     => $promoList,
+            'data'     => $katalogList,
         ], 200);
     }
 
