@@ -269,7 +269,7 @@ class UsersAssetController extends Controller
         $tipe       = $params['tipe'] ?? null;
         $tahun      = $params['tahun'] ?? null;
     
-        // Validasi username dan nopol
+
         if (empty($username) || empty($nopol)) {
             return response()->json([
                 'status'  => 400,
@@ -278,10 +278,8 @@ class UsersAssetController extends Controller
             ], 400);
         }
     
-        // Normalisasi nopol (hilangkan spasi dan ubah ke huruf besar)
-        $nopol_normalized = strtoupper(str_replace(' ', '', $nopol));
+        $nopol_normalized = strtoupper(trim($nopol));
     
-        // Cek apakah kendaraan sudah pernah didaftarkan
         $CheckNopol = DB::table('mst.mst_user_vehicle')
             ->where('username', $username)
             ->whereRaw("REPLACE(UPPER(nopol), ' ', '') = ?", [$nopol_normalized])

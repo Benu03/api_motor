@@ -74,6 +74,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
 
                     $mtr->post('list-service', 'TransactionController@ListServiceUser');
                     $mtr->post('order-service', 'TransactionController@OrderServiceUser');
+                    $mtr->post('order-confirm', 'TransactionController@OrderConfirm');
                     
                     
                 });
