@@ -15,8 +15,8 @@
 
 
 
-// $mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
-// {
+$mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
+{
         $mtr->group(['prefix' => 'api/'], function () use ($mtr) 
         {
             
@@ -87,6 +87,6 @@
             });
         });
 
-// });
+});
 
 $mtr->get('api/v1/get-image-service-detail/{data}', 'ReportController@GetImageServiceDetail');

@@ -231,10 +231,22 @@ class TransactionController extends Controller
             ->update(['is_verify_bengkel' => true]);
 
 
-
-
-
-            // bentuk data service di sini
+            $serviceNumber = 'SRV-' . $data->nopol . '-' . date('Ymd') . '00' . $data->id;
+            $datainsert = [
+                'service_number'   => $serviceNumber,
+                'order_number'     => $data->order_number,
+                'tanggal_service'  => $data->jadwal_service,
+                'status'           => 'ONSCHEDULE', 
+                'nopol'            => $data->nopol,
+                'user_bengkel'     => $data->paired_bengkel,
+                'user_order'       => $data->created_by,
+                'created_by'       => $data->paired_bengkel,
+            ];
+        
+            // Insert ke mvm_service_user_h
+            DB::connection('mtr')
+                ->table('mvm.mvm_service_user_h')
+                ->insert($datainsert);
     
         Log::info('End OrderVerifyBengkel');
     
@@ -242,7 +254,7 @@ class TransactionController extends Controller
             'status'   => 200,
             'success'  => true,
             'message'  => 'Order verifikasi berhasil, service terbentuk',
-            'data'     => $data,
+            'data'     => $serviceNumber ,
         ], 200);
     }
 
