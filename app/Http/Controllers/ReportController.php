@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Models\ServiceModel;
 use Illuminate\Support\Facades\Cache;
 
@@ -123,10 +123,10 @@ class ReportController extends Controller
         ->where('a.mvm_service_vehicle_h_id', $id_service)
         ->get();
     
-    // Query Pekerjaan
-    $jobs = DB::table('mvm.mvm_service_vehicle_d as a')
-        ->leftJoin('mst.mst_price_service as b', DB::raw('CAST(a.unique_data AS BIGINT)'), '=', 'b.id')
-        ->select([
+        // Query Pekerjaan
+        $jobs = DB::table('mvm.mvm_service_vehicle_d as a')
+            ->leftJoin('mst.mst_price_service as b', DB::raw('CAST(a.unique_data AS BIGINT)'), '=', 'b.id')
+            ->select([
             DB::raw('CAST(a.unique_data AS BIGINT) AS id'),
             'b.kode_new',
             'b.service_name',

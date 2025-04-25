@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\InvoiceModel;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\PDF;
 
 
@@ -90,27 +90,7 @@ class TransactionController extends Controller
         ], 200);
     }
     
-
-
-    public function ListServiceUser(Request $request)
-    {
-        Log::info('Begin ListServiceUser');
-    
-        
-
-        
-        Log::info('End ListServiceUser');
-    
-        return response()->json([
-            'status'   => 200,
-            'success'  => true,
-            'message'  => 'Kendaraan berhasil diperbarui',
-            'data'     => [],
-        ], 200);
-    }
-    
-    
-    
+ 
     public function OrderConfirm(Request $request)
     {
         Log::info('Begin OrderConfirm');
@@ -195,6 +175,74 @@ class TransactionController extends Controller
                 'paired_bengkel' => $terdekat->username,
                 'distance_km' => round($minDistance, 2)
             ],
+        ], 200);
+    }
+
+    
+
+    public function OrderListVerifyBengkel(Request $request)
+    {
+        Log::info('Begin OrderListVerifyBengkel');
+    
+        $data = DB::connection('mtr')
+                ->table('mvm.mvm_service_direct_staging')
+                ->where('paired_bengkel', $request->username)
+                ->where('is_verify_bengkel', false)
+                ->get();
+
+    
+        Log::info('End OrderListVerifyBengkel');
+    
+        return response()->json([
+            'status'   => 200,
+            'success'  => true,
+            'message'  => 'List Order verifikasi',
+            'data'     => $data,
+        ], 200);
+    }
+
+
+    public function OrderVerifyBengkel(Request $request)
+    {
+        Log::info('Begin OrderVerifyBengkel');
+    
+        // Ambil data berdasarkan paired_bengkel dan order_number
+        $data = DB::connection('mtr')
+                ->table('mvm.mvm_service_direct_staging')
+                ->where('paired_bengkel', $request->username)
+                ->where('order_number', $request->order_number)
+                ->first();
+    
+        // Cek apakah data ditemukan
+        if (!$data) {
+            Log::warning('Order tidak ditemukan: ' . $request->order_number);
+    
+            return response()->json([
+                'status'  => 404,
+                'success' => false,
+                'message' => 'Order anda tidak ditemukan',
+            ], 404);
+        }
+    
+        DB::connection('mtr')
+            ->table('mvm.mvm_service_direct_staging')
+            ->where('paired_bengkel', $request->username)
+            ->where('order_number', $request->order_number)
+            ->update(['is_verify_bengkel' => true]);
+
+
+
+
+
+            // bentuk data service di sini
+    
+        Log::info('End OrderVerifyBengkel');
+    
+        return response()->json([
+            'status'   => 200,
+            'success'  => true,
+            'message'  => 'Order verifikasi berhasil, service terbentuk',
+            'data'     => $data,
         ], 200);
     }
 
