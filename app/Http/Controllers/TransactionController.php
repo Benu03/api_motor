@@ -58,7 +58,7 @@ class TransactionController extends Controller
             'remark_address'  => $request->remark_alamat,
             'jadwal_service' => $request->jadwal_service,
             'keluhan'        => $request->keluhan,
-            'status'         => 'DRAFT',
+            'status'         => 'MENUNGGU VERIFIKASI',
 
         ]);
 
@@ -159,8 +159,9 @@ class TransactionController extends Controller
             ->where('order_number', $order)
             ->where('created_by', $username)
             ->update([
-                'status' => 'CONFIRM',
+                'status' => 'VERIFIKASI BERHASIL',
                 'paired_bengkel' => $terdekat->username,
+                'updated_date' => Carbon::now()->format('Y-m-d H:i')
             ]);
     
         Log::info("OrderConfirm updated. Order: {$order}, User: {$username}, Bengkel: {$terdekat->username}");
@@ -228,7 +229,7 @@ class TransactionController extends Controller
             ->table('mvm.mvm_service_direct_staging')
             ->where('paired_bengkel', $request->username)
             ->where('order_number', $request->order_number)
-            ->update(['is_verify_bengkel' => true]);
+            ->update(['is_verify_bengkel' => true , 'updated_date' => Carbon::now()->format('Y-m-d H:i')]);
 
 
             $serviceNumber = 'SRV-' . $data->nopol . '-' . date('Ymd') . '00' . $data->id;
@@ -236,7 +237,7 @@ class TransactionController extends Controller
                 'service_number'   => $serviceNumber,
                 'order_number'     => $data->order_number,
                 'tanggal_service'  => $data->jadwal_service,
-                'status'           => 'ONSCHEDULE', 
+                'status'           => 'SERVICE TERJADWAL', 
                 'nopol'            => $data->nopol,
                 'user_bengkel'     => $data->paired_bengkel,
                 'user_order'       => $data->created_by,
@@ -258,5 +259,77 @@ class TransactionController extends Controller
         ], 200);
     }
 
+
+    public function ActivityServiceList(Request $request)
+    {
+        Log::info('Begin ActivityServiceList');
+    
+        $username = $request->username;
+    
+        $dataList = DB::connection('mtr')
+            ->table('mvm.mvm_v_activity_service_list')
+            ->where('created_by', $username)
+            ->get();
+    
+        Log::info('End ActivityServiceList');
+    
+        return response()->json([
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Order verifikasi berhasil, service terbentuk',
+            'data'    => $dataList,
+        ]);
+    }
+
+    public function OrderServiceUpdate(Request $request)
+    {
+        Log::info('Begin OrderServiceUpdate');
+    
+        $username         = $request->username;
+        $order_number     = $request->order_number;
+        $jadwal_service   = $request->jadwal_service;
+        $is_cancel        = $request->is_cancel;
+        $remark_pembatalan = $request->remark_pembatalan;
+    
+        $updateData = [
+            'updated_date' => Carbon::now()->format('Y-m-d H:i')
+        ];
+    
+        // Jika pembatalan
+        if ($is_cancel === true || $is_cancel === 'true') {
+            $updateData['status'] = 'PEMBATALAN';
+            $updateData['remark_pembatalan'] = $remark_pembatalan;
+        }
+    
+        // Jika ada jadwal service
+        if (!empty($jadwal_service)) {
+            $updateData['jadwal_service'] = $jadwal_service;
+        }
+    
+        // Update data
+        DB::connection('mtr')
+            ->table('mvm.mvm_service_direct_staging')
+            ->where('created_by', $username)
+            ->where('order_number', $order_number)
+            ->update($updateData);
+    
+        // Ambil data terbaru
+        $dataList = DB::connection('mtr')
+            ->table('mvm.mvm_v_activity_service_list')
+            ->where('created_by', $username)
+            ->get();
+    
+        Log::info('End OrderServiceUpdate');
+    
+        return response()->json([
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Order verifikasi berhasil, service terbentuk',
+            'data'    => $dataList,
+        ]);
+    }
+
+
+    
 
 }
