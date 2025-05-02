@@ -69,7 +69,7 @@ class UsersAssetController extends Controller
         }
 
 
-        $ListVehicle = DB::table('mst.mst_user_vehicle')->select('id','nopol','type','merk','tahun')->where('username', $username)->get();
+        $ListVehicle = DB::table('mst.mst_user_vehicle')->select('id','nopol','norangka','nomesin','tgl_last_service','last_km','type','merk','tahun')->where('username', $username)->get();
 
         Log::info('End UserListVehicle');
     
