@@ -81,6 +81,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
 
 
                     $mtr->post('activity-service-list', 'TransactionController@ActivityServiceList');
+                    $mtr->post('activity-service-detail', 'TransactionController@ActivityServicedetail');
                     $mtr->post('order-service-update', 'TransactionController@OrderServiceUpdate');
                     
                     

@@ -281,6 +281,31 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function ActivityServicedetail(Request $request)
+    {
+        Log::info('Begin ActivityServicedetail');
+    
+        $username = $request->username;
+        $order_number = $request->order_number;
+    
+        $dataDetail = DB::connection('mtr')
+            ->table('mvm.mvm_v_activity_service_detail')
+            ->where('created_by', $username)
+            ->where('order_number', $order_number)
+            ->first();
+    
+        Log::info('End ActivityServicedetail');
+    
+        return response()->json([
+            'status'  => 200,
+            'success' => true,
+            'message' => 'Detail Data',
+            'data'    => $dataDetail,
+        ]);
+    }
+
+    
+
     public function OrderServiceUpdate(Request $request)
     {
         Log::info('Begin OrderServiceUpdate');
