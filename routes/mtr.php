@@ -88,6 +88,8 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                     $mtr->post('riwayat-list', 'RiwayatController@RiwayatListB2C');
                     $mtr->post('riwayat-detail', 'RiwayatController@RiwayatDetailB2C');
 
+                    $mtr->post('invoice-view-generate', 'RiwayatController@InvoiceGenerate');
+
                     
                 });
 

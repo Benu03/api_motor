@@ -78,6 +78,21 @@ class RiwayatController extends Controller
 
   
 
+    
+    public function InvoiceGenerate(Request $request)
+    {  
+      
+  
+      log::info('End Notif InvoiceGenerate');
+      return response()->json(
+          [   'status'       =>  200,
+              'success'   =>  true,
+              'message'   =>  'Request Success',
+              'data'      =>  []
+          ], 200);
+    }
+
+  
   
   
 
