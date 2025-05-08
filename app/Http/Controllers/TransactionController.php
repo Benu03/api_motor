@@ -265,10 +265,18 @@ class TransactionController extends Controller
         Log::info('Begin ActivityServiceList');
     
         $username = $request->username;
-    
+        $today = Carbon::today(); 
+        
         $dataList = DB::connection('mtr')
             ->table('mvm.mvm_v_activity_service_list')
             ->where('created_by', $username)
+            ->where(function ($query) use ($today) {
+                $query->where('status', '!=', 'SERVIS SELESAI')
+                      ->orWhere(function ($q) use ($today) {
+                          $q->where('status', 'SERVIS SELESAI')
+                            ->whereDate('updated_date', '>=', $today->toDateString());
+                      });
+            })
             ->get();
     
         Log::info('End ActivityServiceList');
