@@ -129,7 +129,7 @@ class RiwayatController extends Controller
 
                 ];
             }),
-            'pdf_url' => url('api/v1/user/invoice-pdf/' . $dataH->invoice_no) 
+            'pdf_url' => url('api/v1/user/invoice-pdf/' . $dataH->invoice_no, [], true)
         ];
     
         Log::info('End Notif InvoiceGenerate');
