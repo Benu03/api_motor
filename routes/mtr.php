@@ -15,8 +15,8 @@
 
 
 
-$mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
-{
+// $mtr->group(['middleware' => 'key_service'], function () use ($mtr) 
+// {
         $mtr->group(['prefix' => 'api/'], function () use ($mtr) 
         {
             
@@ -89,6 +89,7 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
                     $mtr->post('riwayat-detail', 'RiwayatController@RiwayatDetailB2C');
 
                     $mtr->post('invoice-view-generate', 'RiwayatController@InvoiceGenerate');
+                    $mtr->post('invoice-pdf/{data}', 'RiwayatController@InvoiceGeneratePDF');
 
                     
                 });
@@ -98,6 +99,6 @@ $mtr->group(['middleware' => 'key_service'], function () use ($mtr)
             });
         });
 
-});
+// });
 
 $mtr->get('api/v1/get-image-service-detail/{data}', 'ReportController@GetImageServiceDetail');
