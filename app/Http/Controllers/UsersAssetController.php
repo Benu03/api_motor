@@ -175,7 +175,7 @@ class UsersAssetController extends Controller
         }    
 
         $bengkels = DB::select("
-            SELECT username, fullname, lat, lon, address,
+            SELECT username, 'MITRA Mudahin '||fullname as fullname, lat, lon, address,
                 (6371 * acos(
                     cos((? * PI() / 180)) * cos((lat::FLOAT * PI() / 180)) 
                     * cos((lon::FLOAT * PI() / 180) - (? * PI() / 180)) 
@@ -225,7 +225,7 @@ class UsersAssetController extends Controller
         }
     
         $bengkels = DB::select("
-                SELECT username, fullname, lat, lon,
+                SELECT username, 'MITRA Mudahin '||fullname as fullname, lat, lon,
                     (6371 * acos(
                         cos((? * PI() / 180)) * cos((lat::FLOAT * PI() / 180)) 
                         * cos((lon::FLOAT * PI() / 180) - (? * PI() / 180)) 
